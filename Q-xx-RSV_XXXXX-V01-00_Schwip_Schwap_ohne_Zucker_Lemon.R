@@ -11,7 +11,7 @@ setwd("./Produktionsdaten")
 dt$para$files <- dir(pattern = ".csv$")
 dt$para$txt <- txt.file(dt$para$files)
 
-dt$raw <- lapply(dt$para$files, \(x) fread(x, sep = ";", dec = ","))
+dt$raw <- lapply(dt$para$files, \(x) freadr4dt(x, sep = ";", dec = ","))
 names(dt$raw) <- paste0(dt$para$txt$type, "_", dt$para$txt$loc.line)
 
 dt$para$trs <- lapply(dt$raw, transfer_csv.num.col)

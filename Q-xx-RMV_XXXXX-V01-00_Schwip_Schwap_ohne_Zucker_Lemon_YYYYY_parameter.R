@@ -24,7 +24,7 @@ setwd("./Produktionsdaten")
 dt$para$files <- dir(pattern = "validated.csv$")
 dt$para$txt <- txt.file(dt$para$files)
 
-dt$raw <- lapply(dt$para$files, \(x) fread(x, sep = ";", dec = ","))
+dt$raw <- lapply(dt$para$files, \(x) freadr4dt(x, sep = ";", dec = ","))
 names(dt$raw) <- dt$para$txt$type
 
 dt$para$trs <- lapply(dt$raw, transfer_csv.num.col)

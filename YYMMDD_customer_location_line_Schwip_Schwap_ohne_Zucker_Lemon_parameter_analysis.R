@@ -70,9 +70,9 @@ bev$para$files$spc <- grep("spc", dir(pattern = "spc.csv$")[grep(bev$para$bevera
 bev$para$txt <- lapply(bev$para$files, txt.file)
 
 # read files ####
-bev$raw$ref <- lapply(bev$para$files$ref, function(x) fread(x, dec = ",", sep = ";")) # Background spc
-bev$raw$drk <- lapply(bev$para$files$drk, function(x) fread(x, dec = ",", sep = ";")) # Dark spc
-bev$raw$spc <- lapply(bev$para$files$spc, function(x) fread(x, dec = ",", sep = ";")) # Production spc
+bev$raw$ref <- lapply(bev$para$files$ref, function(x) freadr4dt(x, dec = ",", sep = ";")) # Background spc
+bev$raw$drk <- lapply(bev$para$files$drk, function(x) freadr4dt(x, dec = ",", sep = ";")) # Dark spc
+bev$raw$spc <- lapply(bev$para$files$spc, function(x) freadr4dt(x, dec = ",", sep = ";")) # Production spc
 
 # set names ####
 names(bev$raw$ref) <- bev$para$txt$ref$loc.line

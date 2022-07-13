@@ -15,7 +15,7 @@ setwd("./Produktionsdaten")
 dt$para$files <- dir(pattern = "validated.csv$")
 dt$para$txt <- txt.file(dt$para$files)
 
-dt$raw <- lapply(dt$para$files, \( x ) fread(x, sep = ";", dec = ","))
+dt$raw <- lapply(dt$para$files, \( x ) freadr4dt(x, sep = ";", dec = ","))
 lapply(dt$raw, nrow)
 dt$raw <- lapply(dt$raw, \( x ) x[ seq(1, nrow(x), 3) , ])
 names(dt$raw) <- dt$para$txt$loc.line
