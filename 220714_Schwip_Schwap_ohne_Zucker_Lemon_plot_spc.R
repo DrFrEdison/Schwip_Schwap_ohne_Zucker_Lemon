@@ -19,11 +19,11 @@ setwd("..")
 require(openxlsx)
 
 dir( pattern = "Q-xx-MTX-")
-dt$qxxmtx <- c("Q-xx-MTX-00024-V01-00_Max_Lemon.xlsx", "Q-xx-MTX-00024-V01-00_Max_Lemon.xlsx")
+dt$qxxmtx <- c("Q-xx-MTX-00025-V01-00_Schwip_Schwap_ohne_Zucker_Lemon.xlsx", "Q-xx-MTX-00027-V01-00_Schwip_Schwap_ohne_Zucker_Lemon.xlsx")
 
 dt$qxxmtx <- mtx_add( qxxmtx = dt$qxxmtx)
-dt$qxxmtx$QXXMTX <- dt$qxxmtx$QXXMTX[ , 1:8]
-dt$parameter <- dt$qxxmtx$parameter[1:6]
+# dt$qxxmtx$QXXMTX <- dt$qxxmtx$QXXMTX[ , 1:8]
+dt$parameter <- dt$qxxmtx$parameter[1:8]
 dt$qxxmtx <- dt$qxxmtx$QXXMTX
 
 # find parameter in Q-xx-MTX ####
