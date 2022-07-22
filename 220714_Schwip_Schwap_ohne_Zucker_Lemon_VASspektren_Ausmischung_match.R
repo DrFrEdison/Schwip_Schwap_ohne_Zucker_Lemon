@@ -1,7 +1,7 @@
 # beverage parameter ####
 setwd(this.path::this.dir())
 dir( pattern = "_mtx_" )
-source.file <- "Rsource_Mirinda_Light_mtx_mop_val_V01.R"
+source.file <- "Rsource_Schwip_Schwap_ohne_Zucker_Lemon_mtx_mop_val_V01.R"
 source( paste0(getwd(), "/", source.file) )
 
 Acid <- "NaOH" # NA, NaOH or Total
@@ -14,36 +14,77 @@ setwd("./Validierungsset")
 setwd( dt$wd.valset <- getwd() )
 
 # data from
-# read Q-xx-VAS
+# read Q-xx-MTX
 setwd("..")
 require(openxlsx)
 
 dir( pattern = "Q-xx-VAS-")
-dt$qxxmtx1 <- "Q-xx-VAS-00011-V01-00_Mirinda_light.xlsx"
+dt$qxxmtx2 <- "Q-xx-VAS-00012-V01-00_Schwip_Schwap_ohne_Zucker_Lemon.xlsx"
+istprozent2 <- openxlsx::read.xlsx(dt$qxxmtx2, sheet = "p_IST_g")
 
+dt$qxxmtx1 <- "Q-xx-VAS-00013-V01-00_Schwip_Schwap_ohne_Zucker_Lemon.xlsx"
 istprozent1 <- openxlsx::read.xlsx(dt$qxxmtx1, sheet = "p_IST_g")
 
-istprozent <- istprozent1
-istprozent <- istprozent[ !is.na(istprozent$Acesulfam) , ]
+istprozent1 <- istprozent1[ !is.na(istprozent1$LF) , 1:3]
+istprozent1 <- istprozent1[ which(  istprozent1$LF != 0) , ]
+istprozent2 <- istprozent2[ !is.na(istprozent2$Acesulfam) , ]
 
-istprozent[ , "Coffein"][ istprozent[ , "SK"] > 100] <- istprozent[ , "SK"][ istprozent[ , "SK"] > 100]
+istprozent <- rbind.fill(istprozent1, istprozent2)
 
+istprozent[ which( istprozent$FK > 100 ) , "Coffein"]  <- istprozent[ which( istprozent$FK > 100 ) , "Coffein"] + ( istprozent[ which( istprozent$FK > 100 ) , "FK"] - 100 ) * 47.31 / (23.65 + 47.31)
+istprozent[ which( istprozent$GS > 100 ) , "Coffein"]  <- istprozent[ which( istprozent$GS > 100 ) , "Coffein"] + ( istprozent[ which( istprozent$GS > 100 ) , "GS"] - 100 ) * 23.65 / (23.65 + 47.31)
+
+istprozent[ which( istprozent$FS > 100 ) , "LF"] <- istprozent[ which( istprozent$FS > 100 ) , "FS"]
+istprozent[ which( istprozent$FS > 100 ) , "GS"] <- istprozent[ which( istprozent$FS > 100 ) , "FS"]
+istprozent[ which( istprozent$FS > 100 ) , "FK"] <- istprozent[ which( istprozent$FS > 100 ) , "FS"]
+istprozent[ which( istprozent$FS > 100 ) , "Aspartam"] <- istprozent[ which( istprozent$FS > 100 ) , "FS"]
+istprozent[ which( istprozent$FS > 100 ) , "Acesulfam"] <- istprozent[ which( istprozent$FS > 100 ) , "FS"]
+istprozent[ which( istprozent$FS > 100 ) , "Coffein"] <- istprozent[ which( istprozent$FS > 100 ) , "FS"]
+
+istprozent[ which( istprozent$LF > 100 ) , "GS"] <- istprozent[ which( istprozent$LF > 100 ) , "LF"]
+istprozent[ which( istprozent$LF > 100 ) , "FK"] <- istprozent[ which( istprozent$LF > 100 ) , "FK"]
+istprozent[ which( istprozent$LF > 100 ) , "Coffein"] <- istprozent[ which( istprozent$LF > 100 ) , "Coffein"]
+istprozent[ which( istprozent$LF > 100 ) , "Aspartam"] <- istprozent[ which( istprozent$LF > 100 ) , "Aspartam"]
+istprozent[ which( istprozent$LF > 100 ) , "Acesulfam"] <- istprozent[ which( istprozent$LF > 100 ) , "Acesulfam"]
+istprozent[ which( istprozent$LF > 100 ) , "H2O"] <- istprozent[ which( istprozent$LF > 100 ) , "H2O"]
+
+istprozent[ which( is.na(istprozent$LF) ) , "LF"] <- istprozent[ which( is.na(istprozent$LF) ) , "Aspartam"]
+istprozent[ which( istprozent$Aspartam > 100)[ - c(1,2,3,4)] , "LF"] <- istprozent[ which( istprozent$Aspartam > 100)[ - c(1,2,3,4)] , "Coffein"]
+
+istprozent[ which( istprozent$FS > 100 ) , "GS"] <- istprozent[ which( istprozent$FS > 100 ) , "FS"]
+istprozent[ which( istprozent$FS > 100 ) , "FK"] <- istprozent[ which( istprozent$FS > 100 ) , "FS"]
+istprozent[ which( istprozent$FS > 100 ) , "Aspartam"] <- istprozent[ which( istprozent$FS > 100 ) , "FS"]
+istprozent[ which( istprozent$FS > 100 ) , "Acesulfam"] <- istprozent[ which( istprozent$FS > 100 ) , "FS"]
+istprozent[ which( istprozent$FS > 100 ) , "Coffein"] <- istprozent[ which( istprozent$FS > 100 ) , "FS"]
+
+istprozent
 names(istprozent)[1] <- "Probe_Anteil"
 
 if( Acid == "NaOH" | Acid == "Total"){
-
+  
   Acid1 <- openxlsx::read.xlsx(dt$qxxmtx1, sheet = "SA")
   Acid1 <- Acid1[ , c(grep("X1", colnames(Acid1)), grep(Acid, colnames(Acid1))) ]
   Acid1 <- Acid1[ -1, ]
-
+  
   if(Acid == "NaOH") Acid1[ , 2] <- as.numeric(Acid1[ , 2]) * 10
-
-  FG <- Acid1[ Acid1$X1 == "FG" , ]
+  
+  # FG <- Acid1[ Acid1$X1 == "FG" , ]
   Acid1 <- Acid1[ !is.na(as.numeric( substr(Acid1$X1, nchar( Acid1$X1 ) - 2, nchar( Acid1$X1 ) - 2) )) , ]
   Acid1 <- Acid1[ Acid1[ , 2 ] != 0 , ]
-  Acid1 <- Acid1[ !is.na(Acid1[ , 2 ]) , ]
-
-  Acid1 <- rbind(Acid1, FG)
+  # Acid1 <- Acid1[ !is.na(Acid1[ , 2 ]) , ]
+  
+  Acid2 <- openxlsx::read.xlsx(dt$qxxmtx2, sheet = "SA")
+  Acid2 <- Acid2[ , c(grep("X1", colnames(Acid2)), grep(Acid, colnames(Acid2))) ]
+  Acid2 <- Acid2[ -1, ]
+  
+  if(Acid == "NaOH") Acid2[ , 2] <- as.numeric(Acid2[ , 2]) * 10
+  
+  FG <- Acid2[ Acid2$X1 == "FG" , ]
+  Acid2 <- Acid2[ !is.na(as.numeric( substr(Acid2$X1, nchar( Acid2$X1 ) - 2, nchar( Acid2$X1 ) - 2) )) , ]
+  Acid2 <- Acid2[ Acid2[ , 2 ] != 0 , ]
+  # Acid2 <- Acid2[ !is.na(Acid2[ , 2 ]) , ]
+  
+  Acid1 <- rbind(Acid1, Acid2, FG)
   istprozent <- cbind(istprozent, TA = as.numeric(c(Acid1[ , 2])))
 }
 
@@ -128,17 +169,17 @@ istprozent$Probe_Anteil[ grep(paste("FG"), istprozent$Probe_Anteil) ] <- paste0(
 
 # for(i in 1:length(unique(dt$model.para))){
 for(i in 1:length(unique(dt$model.para))){
-
+  
   para_prozent <- gsub(" ", "", gsub("_", ",", gsub("%", "", gsub(unique(dt$model.para)[i], "", istprozent[ , 1][ grep( paste0(unique(dt$model.para)[i], " ") , istprozent[ , 1]) ]))))
-
+  
   para_prozent_flag <- formatC(as.numeric(para_prozent), width = 2, format = "d", flag = "0")
-
+  
   for(j in 1:length(para_prozent)){
-
+    
     mea_s_spc$Probe_Anteil[ grep( paste0("_", unique(dt$model.para)[i], "_", para_prozent[j]), mea_s_spc$files_spc)] <- paste0( unique(dt$model.para)[i], "_", para_prozent_flag[j], "%")
-
+    
     istprozent$Probe_Anteil[ grep(paste(unique(dt$model.para)[i], para_prozent[j], "%"), istprozent$Probe_Anteil) ] <- paste0(unique(dt$model.para)[i], "_", para_prozent_flag[j], "%")
-
+    
   }
 }
 
@@ -160,7 +201,10 @@ names(istprozentmeaspc) <- gsub("X","",names(istprozentmeaspc))
 for(i in dt$para$wl[[1]]) istprozentmeaspc[ , which(names(istprozentmeaspc) == i)] <- as.numeric(as.character(istprozentmeaspc[ , which(names(istprozentmeaspc) == i)]))
 if(any(duplicated(istprozentmeaspc))) istprozentmeaspc <- istprozentmeaspc[ - which(duplicated(istprozentmeaspc)) , ]
 
-# write ####
+istprozentmeaspc$`0` <- NULL
+istprozentmeaspc <- istprozentmeaspc[ which( !is.na(istprozentmeaspc$`190`)) , ]
+head(istprozentmeaspc)
+# write ##### write ##### write ####
 setwd(dt$wd.valset)
 setwd("..")
 setwd("./csv")

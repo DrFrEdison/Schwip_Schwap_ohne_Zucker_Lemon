@@ -1,12 +1,12 @@
 # beverage parameter ####
 setwd(this.path::this.dir())
 dir( pattern = "_val_" )
-source.file <- "Rsource_Schwip_Schwap_Light_mtx_mop_val_V01.R"
+source.file <- "Rsource_Schwip_Schwap_ohne_Zucker_Lemon_mtx_mop_val_V01.R"
 source( paste0(getwd(), "/", source.file) )
 
 # para ####
 dt$para$substance
-dt$para$i = 1
+dt$para$i = 3
 dt$para$substance[dt$para$i]
 
 # keep out ####
@@ -24,19 +24,11 @@ setwd("./Produktionsdaten")
 dt$para$files <- dir(pattern = "validated.csv$")
 dt$para$txt <- txt.file(dt$para$files)
 
-dt$raw <- lapply(dt$para$files, \(x) freadr4dt(x, sep = ";", dec = ","))
-names(dt$raw) <- dt$para$txt$type
+dt$raw <- lapply(dt$para$files, \(x) freadr4dt(x))
+names(dt$raw) <- dt$para$txt$loc.line
 
 dt$para$trs <- lapply(dt$raw, transfer_csv.num.col)
 dt$trs <- lapply(dt$raw, transfer_csv)
-
-# Modellmatrix ####
-setwd(dt$wd)
-setwd("./Modellvalidierung")
-dir.create(paste0("./", dt$para$val.date, "_", dt$para$model.raw.pl[1], "_", dt$para$substance[dt$para$i]), showWarnings = F)
-setwd(paste0("./", dt$para$val.date, "_", dt$para$model.raw.pl[1], "_", dt$para$substance[dt$para$i]))
-dir.create("Modellmatrix", showWarnings = F)
-setwd("./Modellmatrix")
 
 # Prediction
 dt$pred <- lapply(dt$trs, function( x ) use_model_on_device(customer = dt$para$customer

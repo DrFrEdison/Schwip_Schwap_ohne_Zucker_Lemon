@@ -1,6 +1,6 @@
 # beverage parameter ####
 setwd(this.path::this.dir())
-source.file <- print("Rsource_Max_Lemon_mtx_V01.R")
+source.file <- print("Rsource_Schwip_Schwap_ohne_Zucker_Lemon_mtx_mop_val_V01.R")
 source( paste0(getwd(), "/", source.file) )
 
 # spectra ####
@@ -11,7 +11,7 @@ setwd("./Produktionsdaten")
 dt$para$files <- dir(pattern = ".csv$")
 dt$para$txt <- txt.file(dt$para$files)
 
-dt$raw <- lapply(dt$para$files, \(x) freadr4dt(x, sep = ";", dec = ","))
+dt$raw <- lapply(dt$para$files, \(x) freadr4dt(x))
 names(dt$raw) <- paste0(dt$para$txt$type, "_", dt$para$txt$loc.line)
 
 dt$para$trs <- lapply(dt$raw, transfer_csv.num.col)
@@ -25,23 +25,23 @@ dt$para$trs <- lapply(dt$raw, transfer_csv.num.col)
 # validate drk ####
 par( mfrow = c(1, length( grep( "drk", names(dt$para$trs)) )))
 for(i in grep( "drk", names(dt$para$trs)))
-    matplot(dt$para$trs[[ i ]]$wl
-            , t(dt$raw[[ i ]][ , dt$para$trs[[ i ]]$numcol, with = F])
-            , lty = 1, type = "l", xlab = lambda, ylab = "Counts", main = dt$para$txt$loc.line[ i ])
+  matplot(dt$para$trs[[ i ]]$wl
+          , t(dt$raw[[ i ]][ , dt$para$trs[[ i ]]$numcol, with = F])
+          , lty = 1, type = "l", xlab = lambda, ylab = "Counts", main = dt$para$txt$loc.line[ i ])
 
 for(i in grep( "drk", names(dt$para$trs))){
 
-dt$val$drk[[ i ]] <- apply(dt$raw[[ i ]][ , dt$para$trs[[ i ]]$numcol, with = F], 1, spectra.validation.drk)
-print( unique(dt$val$drk[[ i ]]) )
-dt$raw$spc <- dt$raw$spc[ spectra.validation.range(valid.vector = dt$val$drk[[ i ]]
-                                                   , drkref.datetime = dt$raw[[ i ]]$datetime
-                                                   , spc.datetime = dt$raw$spc$datetime
-                                                   , pattern = "invalid") , ]
-dt$val$drk[[ i ]] <- apply(dt$raw[[ i ]][ , dt$para$trs[[ i ]]$numcol, with = F], 1, spectra.validation.drk)
-dt$raw$spc <- dt$raw$spc[ spectra.validation.range(valid.vector = dt$val$drk[[ i ]]
-                                                   , drkref.datetime = dt$raw[[ i ]]$datetime
-                                                   , spc.datetime = dt$raw$spc$datetime
-                                                   , pattern = "empty") , ]
+  dt$val$drk[[ i ]] <- apply(dt$raw[[ i ]][ , dt$para$trs[[ i ]]$numcol, with = F], 1, spectra.validation.drk)
+  print( unique(dt$val$drk[[ i ]]) )
+  dt$raw$spc <- dt$raw$spc[ spectra.validation.range(valid.vector = dt$val$drk[[ i ]]
+                                                     , drkref.datetime = dt$raw[[ i ]]$datetime
+                                                     , spc.datetime = dt$raw$spc$datetime
+                                                     , pattern = "invalid") , ]
+  dt$val$drk[[ i ]] <- apply(dt$raw[[ i ]][ , dt$para$trs[[ i ]]$numcol, with = F], 1, spectra.validation.drk)
+  dt$raw$spc <- dt$raw$spc[ spectra.validation.range(valid.vector = dt$val$drk[[ i ]]
+                                                     , drkref.datetime = dt$raw[[ i ]]$datetime
+                                                     , spc.datetime = dt$raw$spc$datetime
+                                                     , pattern = "empty") , ]
 }
 
 # validate ref ####
@@ -54,22 +54,13 @@ for(i in grep( "ref", names(dt$para$trs)))
 # validate spc ####
 par( mfrow = c(1, length( grep( "spc", names(dt$para$trs)) )))
 for(i in grep( "spc", names(dt$para$trs))){ boxplot( dt$raw[[ i ]]$X220) }
-grep( "spc", names(dt$para$trs)) 
-i = 3; dt$raw[[ i ]] <-  dt$raw[[ i ]][  dt$raw[[ i ]]$X220 > .535 , ]
-i = 6; dt$raw[[ i ]] <-  dt$raw[[ i ]][  dt$raw[[ i ]]$X220 < .94 , ]
+grep( "spc", names(dt$para$trs))
+i = 3; dt$raw[[ i ]] <-  dt$raw[[ i ]][  dt$raw[[ i ]]$X220 > .75 , ]
 
 for(i in grep( "spc", names(dt$para$trs))){ boxplot( dt$raw[[ i ]]$X320) }
-i = 3; dt$raw[[ i ]] <-  dt$raw[[ i ]][  dt$raw[[ i ]]$X320 > -.2 , ]
+i = 3; dt$raw[[ i ]] <-  dt$raw[[ i ]][  dt$raw[[ i ]]$X320 > .209 , ]
 
 for(i in grep( "spc", names(dt$para$trs))){ boxplot( dt$raw[[ i ]]$X420) }
-  
-matplot(dt$para$trs$spc$wl
-        , t(dt$raw$spc[ , dt$para$trs$spc$numcol, with = F])
-        , lty = 1, type = "l")
-
-plot(dt$raw$spc$X279)
-dt$raw$spc <- dt$raw$spc[ dt$raw$spc$X279 > .395 , ]
-dt$raw$spc <- dt$raw$spc[ dt$raw$spc$X279 < .42 , ]
 
 par( mfrow = c(1, length( grep( "spc", names(dt$para$trs)) )))
 for(i in grep( "spc", names(dt$para$trs)))
@@ -79,9 +70,9 @@ for(i in grep( "spc", names(dt$para$trs)))
 
 # export clean spc csv ####
 for(i in grep( "spc", names(dt$para$trs)))
-fwrite(dt$raw[[ i ]]
-       , gsub("_spc.csv", "_spc_validated.csv", dt$para$files[ i ])
-       , sep = ";", dec = ",")
+  fwrite(dt$raw[[ i ]]
+         , gsub("_spc.csv", "_spc_validated.csv", dt$para$files[ i ])
+         , sep = ";", dec = ",")
 
 
 

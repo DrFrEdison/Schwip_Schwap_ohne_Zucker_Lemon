@@ -1,12 +1,12 @@
 # beverage parameter ####
 setwd(this.path::this.dir())
 dir( pattern = "Rsource" )
-source.file <- print("Rsource_Schwip_Schwap_Light_mtx_mop_val_V01.R")
+source.file <- print("Rsource_Schwip_Schwap_ohne_Zucker_Lemon_mtx_mop_val_V01.R")
 source( paste0(getwd(), "/", source.file) )
 
 # spectra ####
 dt$para$substance
-dt$para$i = 2
+dt$para$i = 1
 dt$para$substance[dt$para$i]
 setwd(dt$wd)
 setwd("./Modellvalidierung")
@@ -15,7 +15,7 @@ setwd("./Produktionsdaten")
 dt$para$files <- dir(pattern = "validated.csv$")
 dt$para$txt <- txt.file(dt$para$files)
 
-dt$raw <- lapply(dt$para$files, \( x ) freadr4dt(x, sep = ";", dec = ","))
+dt$raw <- lapply(dt$para$files, \( x ) freadr4dt(x))
 lapply(dt$raw, nrow)
 dt$raw <- lapply(dt$raw, \( x ) x[ seq(1, nrow(x), 3) , ])
 names(dt$raw) <- dt$para$txt$loc.line
@@ -32,24 +32,23 @@ setwd(paste0("./", dt$para$mop.date, "_", dt$para$model.raw.pl[1], "_", dt$para$
 dir.create("Modellmatrix", showWarnings = F)
 setwd("./Modellmatrix")
 
+dt$model.raw <- dt$model.raw[ which( !is.na( dt$model.raw[ , grep( dt$para$substance[ dt$para$i], colnames(dt$model.raw))] ) ) , ]
+
+# dir(wd$data)
+# dt$model.old <- read.csv2(paste0(wd$data, "/model/PepsiCo/PepsiCo_Schwip_Schwap_ohne_Zucker_Lemon_TA_LG1.csv"), sep = "\t")
+# dt$model.raw <- rbind.fill(dt$model.raw, dt$model.old)
+# dt$model.raw$TA
+dir()
+dt$model.raw <- read.csv2( "220722_143637_Schwip_Schwap_ohne_Zucker_Lemon_TA_matrix.csv")
+dt$model.raw <- dt$model.raw[ which( !is.na( dt$model.raw$TA ) ) , ]
+
 fwrite(dt$model.raw, paste0(datetime(), "_", dt$para$beverage, "_", dt$para$substance[dt$para$i], "_matrix.csv"), row.names = F, dec = ",", sep = ";")
+
 dt$model.raw <- transfer_csv(csv.file = dt$model.raw)
 dt$SL <- transfer_csv(csv.file = dt$SL)
 
-# Plot ####
-par( mfrow = c(1,1))
-matplot(dt$para$wl[[1]]
-        , t( dt$SL$spc[ grep(dt$para$substance[ dt$para$i ], dt$SL$data$Probe) , ])
-        , type = "l", lty = 1, xlab = lambda, ylab = "AU", main = "SL vs Modellspektren"
-        , col = "blue", xlim = c(190, 400))
-matplot(dt$para$wl[[1]]
-        , t( dt$model.raw$spc )
-        , type = "l", lty = 1, xlab = lambda, ylab = "AU", main = "SL vs Modellspektren"
-        , col = "red", add = T)
-legend("topright", c(paste0("SL ", dt$para$substance[ dt$para$i]), "Ausmischung"), lty = 1, col = c("blue", "red"))
-
 # PLS para ####
-dt$para.pls$wl <- 200:260
+dt$para.pls$wl <- 220:320
 dt$model.raw$data$Probe == dt$para$substance[dt$para$i]
 dt$para.pls$wlr <- wlr_function(dt$para.pls$wl, dt$para.pls$wl, 10); nrow(dt$para.pls$wlr)
 dt$para.pls$wlm <- wlr_function_multi(dt$para.pls$wl, dt$para.pls$wl, 10); nrow(dt$para.pls$wlm)
@@ -79,11 +78,13 @@ lapply(dt$pls$merge, head)
 if( length(dt$pls$merge) > 1){ 
   dt$pls$mergesite <- merge_pls_site(merge_pls_lm_predict_ls = dt$pls$merge, number = 2000, ncomp = dt$para.pls$ncomp)
   head(dt$pls$mergesite)} else{ 
-  dt$pls$mergesite <- dt$pls$merge[[1]]
-  head(dt$pls$mergesite)}
+    dt$pls$mergesite <- dt$pls$merge[[1]]
+    head(dt$pls$mergesite)}
 
 # Prediciton vas ####
 dt$vas$raw <- dt$vas$raw[ order( dt$vas$raw[ , grep( dt$para$substance[ dt$para$i ], colnames(dt$vas$raw))] ) , ]
+dt$vas$raw <- dt$vas$raw[ which( !is.na( dt$vas$raw[ , grep( dt$para$substance[ dt$para$i], colnames(dt$vas$raw))] ) ) , ]
+
 dt$vas$trs <- transfer_csv( dt$vas$raw )
 
 dt$pls$pred.vas <- produktion_prediction(csv_transfered = dt$vas$trs, pls_function_obj = dt$pls$pls, ncomp = dt$para.pls$ncomp)
@@ -93,9 +94,9 @@ dt$vas$diff <- print( diff ( range(dt$vas$trs$data[ , grep( dt$para$substance[ d
 
 dt$pls$vas <- linearitaet_filter( linearitaet_prediction =  dt$pls$pred.vas$prediction
                                   , ncomp = dt$para.pls$ncomp
-                                  , linearitaet_limit_1 = dt$vas$diff * .90
-                                  , linearitaet_limit_2 = dt$vas$diff * 1.1
-                                  , R_2 = .8
+                                  , linearitaet_limit_1 = dt$vas$diff * .50
+                                  , linearitaet_limit_2 = dt$vas$diff * 1.5
+                                  , R_2 = .7
                                   , SOLL = dt$vas$trs$data[ , grep( dt$para$substance[ dt$para$i ], colnames( dt$vas$trs$data ))]
                                   , pls_merge = dt$pls$mergesite )
 
@@ -106,36 +107,36 @@ dat1 <- dat1[order(dat1$mad, decreasing = F) , ]
 head(dat1)
 dat1 <- dat1[dat1$spc != "spc" , ]
 head(dat1)
- 
-# Prediciton lin ####
-dt$pls$pred.lin <- produktion_prediction(csv_transfered = dt$lin$trs, pls_function_obj = dt$pls$pls, ncomp = dt$para.pls$ncomp)
 
-# Lin
-dt$lin$diff <- print( diff ( range(dt$lin$trs$data[ , grep( dt$para$substance[ dt$para$i ], colnames( dt$lin$trs$data ))]) ) )
-
-dt$pls$lin <- linearitaet_filter( linearitaet_prediction =  dt$pls$pred.lin$prediction
-                                  , ncomp = dt$para.pls$ncomp
-                                  , linearitaet_limit_1 = dt$lin$diff * .90
-                                  , linearitaet_limit_2 = dt$lin$diff * 1.1
-                                  , R_2 = .75
-                                  , SOLL = dt$lin$trs$data[ , grep( dt$para$substance[ dt$para$i ], colnames( dt$lin$trs$data ))]
-                                  , pls_merge = dt$pls$mergesite )
-
-dat1 <- merge.data.frame(dt$pls$lin, dt$pls$mergesite)
-dat1 <- dat1[order(dat1$sd, decreasing = F) , ]
-head(dat1)
-dat1 <- dat1[order(dat1$mad, decreasing = F) , ]
-head(dat1)
-dat1 <- dat1[dat1$spc != "spc" , ]
-head(dat1)
+# # Prediciton lin ####
+# dt$pls$pred.lin <- produktion_prediction(csv_transfered = dt$lin$trs, pls_function_obj = dt$pls$pls, ncomp = dt$para.pls$ncomp)
+# 
+# # Lin
+# dt$lin$diff <- print( diff ( range(dt$lin$trs$data[ , grep( dt$para$substance[ dt$para$i ], colnames( dt$lin$trs$data ))]) ) )
+# 
+# dt$pls$lin <- linearitaet_filter( linearitaet_prediction =  dt$pls$pred.lin$prediction
+#                                   , ncomp = dt$para.pls$ncomp
+#                                   , linearitaet_limit_1 = dt$lin$diff * .90
+#                                   , linearitaet_limit_2 = dt$lin$diff * 1.1
+#                                   , R_2 = .75
+#                                   , SOLL = dt$lin$trs$data[ , grep( dt$para$substance[ dt$para$i ], colnames( dt$lin$trs$data ))]
+#                                   , pls_merge = dt$pls$mergesite )
+# 
+# dat1 <- merge.data.frame(dt$pls$lin, dt$pls$mergesite)
+# dat1 <- dat1[order(dat1$sd, decreasing = F) , ]
+# head(dat1)
+# dat1 <- dat1[order(dat1$mad, decreasing = F) , ]
+# head(dat1)
+# dat1 <- dat1[dat1$spc != "spc" , ]
+# head(dat1)
 
 # Prediciton ####
-dt$mop$ncomp <- 2
-dt$mop$wl1 <- 230
-dt$mop$wl2 <- 240
-dt$mop$wl3 <- 280
-dt$mop$wl4 <- 290
-dt$mop$spc <- "2nd"
+dt$mop$ncomp <- 1
+dt$mop$wl1 <- 250
+dt$mop$wl2 <- 270
+dt$mop$wl3 <- 300
+dt$mop$wl4 <- 320
+dt$mop$spc <- "1st"
 dt$mop$model <- pls_function(dt$model.raw, dt$para$substance[ dt$para$i ], data.frame(dt$mop$wl1, dt$mop$wl2, dt$mop$wl3, dt$mop$wl4), dt$mop$ncomp, spc = dt$mop$spc)
 dt$mop$model  <- dt$mop$model [[grep(dt$mop$spc, names(dt$mop$model))[1]]][[1]]
 
@@ -165,11 +166,13 @@ dt$mop$pred.vas <- pred_of_new_model(dt$model.raw
 #                                      , dt$mop$spc
 #                                      , dt$lin$trs)
 
+
+
 dt$mop$pred <- mapply(function( pred, date ) ma.date( x = pred, time = date$datetime)
                       , pred = dt$mop$pred
                       , date = dt$raw
                       , SIMPLIFY = F)
-dt$mop$bias <- lapply(dt$mop$pred, function( x ) round( bias( median( x, na.rm = T), 0, 100 ), 3))
+dt$mop$bias <- lapply(dt$mop$pred, function( x ) round( bias( median( x, na.rm = T), 0, dt$para$SOLL[ dt$para$i ] ), 3))
 dt$mop$bias
 # dt$mop$bias.lin <- round( bias( median( dt$mop$pred.lin, na.rm = T), 0, median(dt$lin$trs$data[ , grep( dt$para$substance[ dt$para$i ], colnames( dt$lin$trs$data ))]) ), 3)
 # dt$mop$bias.lin
@@ -185,14 +188,14 @@ dt$mop$pred.vas <- dt$mop$pred.vas - dt$mop$bias.vas
 par( mfrow = c(1,1))
 # plot(dt$mop$pred.lin
 #      , xlab = "", ylab = dt$para$ylab[ dt$para$i ], main = dt$para$txt$loc.line[ i ]
-#      , ylim = 100 * c(85, 105) / 100, axes = T
+#      , ylim = dt$para$SOLL[ dt$para$i ] * c(85, 105) / 100, axes = T
 #      , sub = paste("Bias =", dt$mop$bias[ i ]))
 # points(dt$lin$trs$data[ , grep( dt$para$substance[ dt$para$i ], colnames( dt$lin$trs$data ))], col = "red")
 
 par( mfrow = c(1,1))
 plot(x <- dt$mop$pred.vas
      , xlab = "", ylab = dt$para$ylab[ dt$para$i ], main = dt$para$txt$loc.vase[ i ]
-     , ylim = 100 * c(75, 115) / 100, axes = T
+     , ylim = dt$para$SOLL[ dt$para$i ] * c(85, 115) / 100, axes = T
      , sub = paste("Bias =", dt$mop$bias[ i ]))
 points(y <- dt$vas$trs$data[ , grep( dt$para$substance[ dt$para$i ], colnames( dt$vas$trs$data ))], col = "red")
 summary( lm (y ~ x))
@@ -201,7 +204,7 @@ par(mfrow = c(length( dt$mop$pred ), 1))
 for(i in 1:length(dt$mop$pred)){
   plot(dt$mop$pred[[ i ]]
        , xlab = "", ylab = dt$para$ylab[ dt$para$i ], main = dt$para$txt$loc.line[ i ]
-       , ylim = 100 * c(95, 105) / 100, axes = F
+       , ylim = dt$para$SOLL[ dt$para$i ] * c(75, 125) / 100, axes = F
        , sub = paste("Bias =", dt$mop$bias[ i ]))
   xaxisdate(dt$trs[[ i ]]$data$datetime)
   abline( h = unlist(dt$para$eingriff[[ dt$para$i ]]), col = "orange", lty = 2 )

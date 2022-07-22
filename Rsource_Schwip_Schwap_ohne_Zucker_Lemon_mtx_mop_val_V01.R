@@ -53,43 +53,70 @@ dt$para$sperr <- data.frame( TA = c(NA, NA)
 )
 # #
 # # # Modelloptimierung
-# dir( paste0( dt$wd, "/", "/Modelloptimierung") )
-# dt$para$mop.date <- "220617"
-# 
-# # Model Matrix Ausmischung ####
-# setwd(dt$wd)
-# setwd("./Modellerstellung")
-# setwd(paste0("./", dt$para$model.raw.date[1], "_", dt$para$model.raw.pl[1]))
-# setwd("./csv")
-# 
-# dt$model.raw <- read.csv2( print(grep( "Modellspektren_Ausmischung_match.csv", dir(), value = T)), dec = ",", sep = ";")
-# head10(dt$model.raw)
-# 
-# for(i in 1:length(dt$para$substance)){
-#   if(dt$para$substance[i] == "TA" | dt$para$substance[i] == "TTA" | dt$para$substance[i] == "Acid") next
-#   dt$model.raw[ , colnames(dt$model.raw) %in% dt$para$substance[i]] <- dt$model.raw[ , colnames(dt$model.raw) %in% dt$para$substance[i]] * dt$para$SOLL[i] / 100
-# }
-# 
-# dt$SL <- dt$model.raw[which(dt$model.raw$Probe_Anteil == "SL") , ]
-# dt$model.raw <- dt$model.raw[which(dt$model.raw$Probe_Anteil != "SL") , ]
-# 
+dir( paste0( dt$wd, "/", "/Modelloptimierung") )
+dt$para$mop.date <- "220722"
+
+for(i in 1 : length(dt$para$substance)){
+  ID <- 39
+setwd( dt$wd.git )
+file.copy(grep("Q-xx-RMO_", dir(), value = T)
+          , gsub("parameter", dt$para$substance[i]
+                 , gsub("YYYYY", dt$para$model.raw.pl
+                        ,  gsub("beverage", dt$para$beverage
+                                , gsub("XXXXX", formatC(ID + i - 1, digits = 5, flag = "0")
+                                       , grep("Q-xx-RMO_", dir(dt$wd.git), value = T))))), overwrite = F)
+}
+rm(ID)
+file.remove(grep("Q-xx-RMO_XXXXX", dir(), value = T))
+
+# Model Matrix Ausmischung ####
+setwd(dt$wd)
+setwd("./Modellerstellung")
+setwd(paste0("./", dt$para$model.raw.date[1], "_", dt$para$model.raw.pl[1]))
+setwd("./csv")
+
+dt$model.raw <- read.csv2( print(grep( "Modellspektren_Ausmischung_match.csv", dir(), value = T)), dec = ",", sep = ";")
+head10(dt$model.raw, ncolp = 15)
+
+for(i in 1:length(dt$para$substance)){
+  if(dt$para$substance[i] == "TA" | dt$para$substance[i] == "TTA" | dt$para$substance[i] == "Acid") next
+  dt$model.raw[ , colnames(dt$model.raw) %in% dt$para$substance[i]] <- dt$model.raw[ , colnames(dt$model.raw) %in% dt$para$substance[i]] * dt$para$SOLL[i] / 100
+}
+
+dt$model.raw <- dt$model.raw[ !is.na( dt$model.raw$X190 ) , ]
+dt$SL <- dt$model.raw[which(dt$model.raw$Probe_Anteil == "SL") , ]
+dt$model.raw <- dt$model.raw[which(dt$model.raw$Probe_Anteil != "SL") , ]
+ 
 # # VAS
-# setwd(dt$wd)
-# setwd("./Modellerstellung")
-# setwd(paste0("./", dt$para$model.raw.date[1], "_", dt$para$model.raw.pl[1]))
-# setwd("./csv")
-# 
-# dt$vas$raw <- read.csv2( print(grep( "VASspektren_Ausmischung_match", dir(), value = T)), dec = ",", sep = ";")
-# 
-# for(i in 1:length(dt$para$substance)){
-#   if(dt$para$substance[i] == "TA" | dt$para$substance[i] == "TTA" | dt$para$substance[i] == "Acid") next
-#   dt$vas$raw[ , colnames(dt$vas$raw) %in% dt$para$substance[i]] <- dt$vas$raw[ , colnames(dt$vas$raw) %in% dt$para$substance[i]] * dt$para$SOLL[i] / 100
-# }
+setwd(dt$wd)
+setwd("./Modellerstellung")
+setwd(paste0("./", dt$para$model.raw.date[1], "_", dt$para$model.raw.pl[1]))
+setwd("./csv")
+
+dt$vas$raw <- read.csv2( print(grep( "VASspektren_Ausmischung_match", dir(), value = T)), dec = ",", sep = ";")
+
+for(i in 1:length(dt$para$substance)){
+  if(dt$para$substance[i] == "TA" | dt$para$substance[i] == "TTA" | dt$para$substance[i] == "Acid") next
+  dt$vas$raw[ , colnames(dt$vas$raw) %in% dt$para$substance[i]] <- dt$vas$raw[ , colnames(dt$vas$raw) %in% dt$para$substance[i]] * dt$para$SOLL[i] / 100
+}
 
 # Modellvalidierung ####
-# dir( paste0( dt$wd, "/", "/Modellvalidierung") )
-# dt$para$val.date <- "220524"
-#
+dir( paste0( dt$wd, "/", "/Modellvalidierung") )
+dt$para$val.date <- "220722"
+
+for(i in 1 : length(dt$para$substance)){
+  ID <- 39
+  setwd( dt$wd.git )
+  file.copy(grep("Q-xx-RMV_", dir(), value = T)
+            , gsub("parameter", dt$para$substance[i]
+                   , gsub("YYYYY", dt$para$model.raw.pl
+                          ,  gsub("beverage", dt$para$beverage
+                                  , gsub("XXXXX", formatC(ID + i - 1, digits = 5, flag = "0")
+                                         , grep("Q-xx-RMV_", dir(dt$wd.git), value = T))))), overwrite = F)
+}
+rm(ID)
+file.remove(grep("Q-xx-RMV_XXXXX", dir(), value = T))
+
 # # Linearity
 # setwd(dt$wd)
 # setwd("./Modellvalidierung")
@@ -98,7 +125,7 @@ dt$para$sperr <- data.frame( TA = c(NA, NA)
 # dt$lin$raw <- read.csv2( "220602_Schwip_Schwap_Light_Linearitaet_TA_Coffein_Aspartam_Acesulfam.csv" , sep = "\t")
 # dt$lin$raw <- dt$lin$raw[ order(dt$lin$raw$Dilution) , ]
 # dt$lin$trs <- transfer_csv(dt$lin$raw)
-#
+# 
 # dt$para$Charge.val <- c("")
 # dt$para$Charge.val.Sirup <- ""
 
